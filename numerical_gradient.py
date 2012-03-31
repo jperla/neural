@@ -26,10 +26,10 @@ def compute(theta, J, epsilon=0.0001):
         y[i] += epsilon
         return y
 
-    e = partial(offset, size, epsilon)
+    o = partial(offset, size, epsilon)
     for i in xrange(size):
-        q = e(i)
-        grad[i] = (J(theta + q) - J(theta - q)) / (2 * epsilon)
+        e = o(i)
+        grad[i] = (J(theta + e) - J(theta - e)) / (2 * epsilon)
 
     return grad
 

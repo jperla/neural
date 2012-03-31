@@ -28,9 +28,10 @@ def array_to_file(filename, a):
     i = Image.fromarray(a.astype('uint8'))
     return i.save(filename)
 
-def display_network(filename, images):
+def display_network(filename, images, padding=1):
     """Accepts filename string,
-        2-d numpy array of images.
+        2-d numpy array of images,
+        and padding (default 1) number of black pixels between images.
         Each column of images is a filter. 
 
         This function visualizes filters in matrix images. 
@@ -58,13 +59,17 @@ def display_network(filename, images):
     cols = int(math.sqrt(n))
     rows = int(n / cols) + (1 if n % cols > 0 else 0)
 
+    # black background in output
+    p = padding
+    output = np.zeros((p + rows * (d + p), p + cols * (d + p)))
+    output += np.min(images.flatten())
     # then fill in the output
-    output = np.empty((rows * d, cols * d))
     for i in xrange(n):
         r,c = int(i / cols), i % cols
         image = images[:,i]
         image.shape = (d,d)
-        output[r*d:(r*d+d),c*d:(c*d+d)] = image 
+        x,y = (r*(d+p))+p, (c*(d+p))+p
+        output[x:x+d,y:y+d] = image
 
     # and save it 
     return array_to_file(filename, output)

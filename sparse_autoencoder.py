@@ -28,27 +28,31 @@ def cost(theta, visible_size, hidden_size,
     """
     hv = hidden_size * visible_size
 
-    W1 = theta[1:hv].reshape(hidden_size, visible_size)
-    W2 = theta[hv+1:2*hv].reshape(visible_size, hidden_size)
-    b1 = theta[2*hv+1:2*hv+hidden_size]
-    b2 = theta[2*hv+hidden_size+1:]
+    W1 = theta[:hv].reshape(hidden_size, visible_size)
+    W2 = theta[hv:2*hv].reshape(visible_size, hidden_size)
+    b1 = theta[2*hv:2*hv+hidden_size]
+    b2 = theta[2*hv+hidden_size:]
 
     # Cost and gradient variables (your code needs to compute these values). 
 
     # Here, we initialize them to zeros. 
-    cost = 0
-
     W1grad = np.zeros(W1.shape)
     W2grad = np.zeros(W2.shape)
     b1grad = np.zeros(b1.shape)
     b2grad = np.zeros(b2.shape)
 
+    def T(a):
+        """Given 1-d array. Make it a column vector.
+            Returns 2d array with Nx1 size.
+        """
+        return a.reshape(len(a), 1)
+
     num_data = data.shape[1]
     # do a feed forward pass
      # a2: (hidden_size, num_data)
-    a2 = sigmoid(np.dot(W1, data) + b1.T)
+    a2 = sigmoid(np.dot(W1, data) + T(b1))
      # a2: (visible_size, num_data)
-    a3 = sigmoid(np.dot(W2, a2) + b2.T)
+    a3 = sigmoid(np.dot(W2, a2) + T(b2))
     assert a2.shape == (hidden_size, num_data)
     assert a3.shape == (visible_size, num_data)
 
@@ -60,20 +64,22 @@ def cost(theta, visible_size, hidden_size,
      # delta2: (hidden, num_data)
     delta2 = np.dot(W2.T, delta3) * (a2 * (1 - a2))
 
-    W1grad = np.dot(delta2, data.T)
-    W2grad = np.dot(delta3, a2.T)
-    b1grad = delta2
-    b2grad = delta3
+    W1grad[:,:] = np.dot(delta2, data.T) / float(num_data)
+    W2grad[:,:] = np.dot(delta3, a2.T) / float(num_data)
+    b1grad[:] = np.sum(delta2, axis=1) / float(num_data)
+    b2grad[:] = np.sum(delta3, axis=1) / float(num_data)
     
     grad = flatten_params(W1grad, W2grad, b1grad, b2grad)
     return cost, grad
 
-def initialize_parameters(hidden_size, visible_size):
+def initialize_params(hidden_size, visible_size):
     """Accepts number of hidde states in sparse encoder,
             and number of input states in sparse encoder..
        Initialize parameters randomly based on layer sizes.
        Returns a new flat array of size 2*visisble_size + hidden_size
     """
+    assert hidden_size < visible_size
+
     #we'll choose weights uniformly from the interval [-r, r]
     r  = np.sqrt(6) / np.sqrt(hidden_size + visible_size + 1)
     W1 = np.random.rand(hidden_size, visible_size) * 2 * r - r
