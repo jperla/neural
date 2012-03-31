@@ -3,14 +3,6 @@
 import numpy as np
 import display
 
-def sigmoid(x): 
-    """Accepts real.
-        Returns real.
-        Sigmoid function: range is [0,1].
-        Similar to tanh function.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
 def cost(theta, visible_size, hidden_size,
          weight_decay, sparsity_param, beta, data):
     """
@@ -26,48 +18,32 @@ def cost(theta, visible_size, hidden_size,
     % We first convert theta to the (W1, W2, b1, b2) matrix/vector format, so that this 
     % follows the notation convention of the lecture notes. 
     """
-    hv = hidden_size * visible_size
-
-    W1 = theta[:hv].reshape(hidden_size, visible_size)
-    W2 = theta[hv:2*hv].reshape(visible_size, hidden_size)
-    b1 = theta[2*hv:2*hv+hidden_size]
-    b2 = theta[2*hv+hidden_size:]
-
-    # Cost and gradient variables (your code needs to compute these values). 
-
-    # Here, we initialize them to zeros. 
-    W1grad = np.zeros(W1.shape)
-    W2grad = np.zeros(W2.shape)
-    b1grad = np.zeros(b1.shape)
-    b2grad = np.zeros(b2.shape)
-
-    def T(a):
-        """Given 1-d array. Make it a column vector.
-            Returns 2d array with Nx1 size.
-        """
-        return a.reshape(len(a), 1)
-
+    W1, W2, b1, b2 = unflatten_params(theta, hidden_size, visible_size)
     num_data = data.shape[1]
+
     # do a feed forward pass
-     # a2: (hidden_size, num_data)
     a2 = sigmoid(np.dot(W1, data) + T(b1))
-     # a2: (visible_size, num_data)
     a3 = sigmoid(np.dot(W2, a2) + T(b2))
     assert a2.shape == (hidden_size, num_data)
     assert a3.shape == (visible_size, num_data)
 
-    cost = 1.0 / num_data * (0.5) * np.sum((a3 - data)**2)
+    cost = 1.0 / num_data * ((0.5) * np.sum((a3 - data)**2))
 
     # compute the backprop
-     # delta3: (visible_size, num_data)
     delta3 = -(data - a3) * (a3 * (1 - a3))
-     # delta2: (hidden, num_data)
     delta2 = np.dot(W2.T, delta3) * (a2 * (1 - a2))
+    assert delta3.shape == (visible_size, num_data)
+    assert delta2.shape == (hidden_size, num_data)
 
-    W1grad[:,:] = np.dot(delta2, data.T) / float(num_data)
-    W2grad[:,:] = np.dot(delta3, a2.T) / float(num_data)
-    b1grad[:] = np.sum(delta2, axis=1) / float(num_data)
-    b2grad[:] = np.sum(delta3, axis=1) / float(num_data)
+    # compute final gradient
+    W1grad = np.dot(delta2, data.T) / float(num_data)
+    W2grad = np.dot(delta3, a2.T) / float(num_data)
+    b1grad = np.sum(delta2, axis=1) / float(num_data)
+    b2grad = np.sum(delta3, axis=1) / float(num_data)
+    assert W1grad.shape == W1.shape
+    assert W2grad.shape == W2.shape
+    assert b1grad.shape == b1.shape
+    assert b2grad.shape == b2.shape
     
     grad = flatten_params(W1grad, W2grad, b1grad, b2grad)
     return cost, grad
@@ -97,4 +73,39 @@ def initialize_params(hidden_size, visible_size):
     return flatten_params(W1, W2, b1, b2)
 
 def flatten_params(*args):
+    """Accepts a list of matrices.
+        Flattens and concatenates the matrices.
+        Returns a 1-d array.
+    """
     return np.hstack([a.flatten() for a in args])
+
+def unflatten_params(theta, hidden_size, visible_size):
+    """Accepts flat 1-D vector theta.
+        Pulls out the weight vectors and returns them for 
+            sparse autoencoding.
+    """
+    #TODO: jperla: generalize
+    hv = hidden_size * visible_size
+    W1 = theta[:hv].reshape(hidden_size, visible_size)
+    W2 = theta[hv:2*hv].reshape(visible_size, hidden_size)
+    b1 = theta[2*hv:2*hv+hidden_size]
+    b2 = theta[2*hv+hidden_size:]
+    return W1, W2, b1, b2
+
+def T(a):
+    """Given 1-d array. Make it a column vector.
+        Returns 2d array with Nx1 size.
+
+        Useful when adding a column vector to every column in a matrix.
+            (instead of bsxfun or repmat in Matlab)
+    """
+    return a.reshape(len(a), 1)
+
+def sigmoid(x): 
+    """Accepts real.
+        Returns real.
+        Sigmoid function: range is [0,1].
+        Similar to tanh function.
+    """
+    return 1.0 / (1.0 + np.exp(-x))
+
