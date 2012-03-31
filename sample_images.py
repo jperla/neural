@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import gzip
+import cPickle
 import random
 
 import numpy as np
@@ -69,8 +71,18 @@ def sample(images, num_samples, size=(8,8)):
     """
     return normalize_data(np.array([random_sample(images, size)
                                         for i in xrange(num_samples)]).T)
+
+def load_mnist_images(filename):
+    """Accepts filename.
+        Reads in MNIST data.
+        Returns 3-tuple of training, validation, and test set.
+    """
+    with gzip.open(filename, 'rb') as f:
+        train_set, valid_set, test_set = cPickle.load(f)
+    return train_set, valid_set, test_set
     
 if __name__=='__main__':
+    '''
     num_samples = 10000
     images = load_matlab_images('IMAGES.mat')
     samples = sample(images, num_samples, (8,8))
@@ -81,4 +93,7 @@ if __name__=='__main__':
     except Exception, e:
         print e
         import pdb; pdb.post_mortem()
+    '''
+    train, valid, test = load_mnist_images('data/mnist.pkl.gz')
+    display_network.display_network('mnist.png', train[0].T[:,:100])
 
