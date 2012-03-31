@@ -13,39 +13,69 @@ visible_size = patch_size[0] * patch_size[1]
 #hidden_size = 25
 hidden_size = 3
 weight_decay, sparsity_param, beta = 0.0001, 0.01, 3
+#weight_decay, sparsity_param, beta = 0, 0.01, 0
 
 #num_samples = 10
 num_samples = 100
 images = sample_images.load_matlab_images('IMAGES.mat')
 patches = sample_images.sample(images, num_samples, patch_size)
 
-def test_sae_cost():
-    sae_cost = partial(sparse_autoencoder.cost,
-                            visible_size=visible_size, 
-                            hidden_size=hidden_size,
-                            weight_decay=weight_decay, 
-                            sparsity_param=sparsity_param, 
-                            beta=beta,
-                            data=patches)
+base_sae_cost = partial(sparse_autoencoder.cost,
+                        visible_size=visible_size, 
+                        hidden_size=hidden_size,
+                        sparsity_param=sparsity_param,
+                        data=patches)
 
-    theta = sparse_autoencoder.initialize_params(hidden_size, visible_size)
-    cost, grad = sae_cost(theta)
+def check_sae(sc, theta, threshold):
+    cost, grad = sc(theta)
     ngrad = numerical_gradient.compute(theta,
-                                       lambda x: sae_cost(x)[0],
+                                       lambda x: sc(x)[0],
                                        epsilon=0.0001)
-    print cost
-    print ngrad.shape, grad.shape
-    print ngrad, grad
+    print 'cost', cost
+    print 'shapes:', ngrad.shape, grad.shape
+    assert ngrad.shape == grad.shape
 
     diff = diff_grad(ngrad, grad)
-    print diff
+    print 'diff:', diff
 
-    threshold = 1e-9 * (num_samples / 50.0)
     assert diff < threshold
+    return cost, grad, ngrad
+
+def test_sae_cost():
+    threshold = 1e-9 * (num_samples / 50.0)
+    theta = sparse_autoencoder.initialize_params(hidden_size, visible_size)
+
+    sae_cost = partial(base_sae_cost, weight_decay=weight_decay, beta=beta)
+    cost, grad, ngrad = check_sae(sae_cost, theta, threshold)
 
 
     # test that if gradient is wrong, we fail
-    grad[8] = 1000
-    assert diff_grad(ngrad, grad) > threshold
+    bad_grad = np.array(grad)
+    bad_grad[2] = 1000
+    assert diff_grad(ngrad, bad_grad) > threshold
+    bad_grad2 = 2 * np.array(grad)
+    assert diff_grad(ngrad, bad_grad2) > threshold
 
+    # test that weight params actually do something
+    if weight_decay > 0:
+        noweight_sae_cost = partial(base_sae_cost, weight_decay=0, beta=beta)
+        noweight_cost, noweight_grad, _ = check_sae(noweight_sae_cost, 
+                                                    theta, threshold)
+        print 'noweight cost:', noweight_cost
+        diff = diff_grad(grad, noweight_grad)
+        print 'noweight diff:', diff
+        assert diff > threshold
+
+
+    # test that sparsity works
+    if beta > 0:
+        nosparsity_sae_cost = partial(base_sae_cost,
+                                      weight_decay=weight_decay,
+                                      beta=0)
+        nosparsity_cost, nosparsity_grad, _ = check_sae(nosparsity_sae_cost,
+                                                        theta, threshold)
+        print 'nosparsity cost:', nosparsity_cost
+        diff = diff_grad(grad, nosparsity_grad)
+        print 'nosparsity diff:', diff
+        assert diff > threshold
 

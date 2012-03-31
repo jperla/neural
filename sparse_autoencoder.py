@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import math
 
 import numpy as np
-import display
 
 def cost(theta, visible_size, hidden_size,
          weight_decay, sparsity_param, beta, data):
@@ -27,17 +27,38 @@ def cost(theta, visible_size, hidden_size,
     assert a2.shape == (hidden_size, num_data)
     assert a3.shape == (visible_size, num_data)
 
-    cost = 1.0 / num_data * ((0.5) * np.sum((a3 - data)**2))
 
-    # compute the backprop
-    delta3 = -(data - a3) * (a3 * (1 - a3))
-    delta2 = np.dot(W2.T, delta3) * (a2 * (1 - a2))
+
+    cost = 1.0 / num_data * ((0.5) * np.sum((a3 - data)**2))
+    # add in weight decay
+    cost += weight_decay / 2.0 * (np.sum(W1**2) + np.sum(W2**2))
+    # add in sparsity parameter
+    sparsity = np.sum(a2, axis=1) / float(num_data)
+    assert sparsity.shape == (hidden_size,)
+    s = sum(binary_KL_divergence(sparsity_param, p) for p in sparsity)
+    cost += beta * s
+
+    # delta3: Compute the backprop (product rule)
+    delta3 = -(data - a3) * a3 * (1 - a3)
     assert delta3.shape == (visible_size, num_data)
+    # delta2: Compute the backprop (product rule)
+    # 1. calculate inner derivative
+    delta2 = np.dot(W2.T, delta3) 
+    # 2. add in sparsity parameter
+    delta2 += T(beta * ((-sparsity_param / sparsity) +
+                                ((1 - sparsity_param) / (1 - sparsity))))
+    # 3. multiply by outer derivative
+    delta2 *= a2 * (1 - a2)
     assert delta2.shape == (hidden_size, num_data)
 
     # compute final gradient
     W1grad = np.dot(delta2, data.T) / float(num_data)
     W2grad = np.dot(delta3, a2.T) / float(num_data)
+    # add weight decay
+    W1grad += weight_decay * W1
+    W2grad += weight_decay * W2
+
+
     b1grad = np.sum(delta2, axis=1) / float(num_data)
     b2grad = np.sum(delta3, axis=1) / float(num_data)
     assert W1grad.shape == W1.shape
@@ -108,4 +129,8 @@ def sigmoid(x):
         Similar to tanh function.
     """
     return 1.0 / (1.0 + np.exp(-x))
+
+def binary_KL_divergence(p1, p2):
+    p1, p2 = float(p1), float(p2)
+    return (p1 * math.log(p1/p2)) + ((1 - p1) * math.log((1 - p1) / (1 - p2)))
 

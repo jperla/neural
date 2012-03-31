@@ -16,7 +16,7 @@ def simple_quadratic(x):
     return value, grad
 
 def norm(x):
-    """Accepts array. Calculates L2-norm.
+    """Accepts n-d array. Calculates L2-norm.
         Returns real.
     """
     return np.sqrt(np.sum(x**2))
