@@ -3,7 +3,6 @@
 import numpy as np
 import display
 
-
 def sigmoid(x): 
     """Accepts real.
         Returns real.
@@ -12,9 +11,8 @@ def sigmoid(x):
     """
     return 1.0 / (1.0 + np.exp(-x))
 
-
-def sparse_autoencoder_cost(theta, visible_size, hidden_size, 
-                            weight_decay, sparsity_param, beta, data):
+def cost(theta, visible_size, hidden_size,
+         weight_decay, sparsity_param, beta, data):
     """
     % visible_size: the number of input units (probably 64) 
     % hidden_size: the number of hidden units (probably 25) 
@@ -39,6 +37,7 @@ def sparse_autoencoder_cost(theta, visible_size, hidden_size,
 
     # Here, we initialize them to zeros. 
     cost = 0
+
     W1grad = np.zeros(W1.shape)
     W2grad = np.zeros(W2.shape)
     b1grad = np.zeros(b1.shape)
@@ -47,11 +46,13 @@ def sparse_autoencoder_cost(theta, visible_size, hidden_size,
     num_data = data.shape[1]
     # do a feed forward pass
      # a2: (hidden_size, num_data)
-    a2 = sigmoid(np.dot(W1, x) + b1.T)
+    a2 = sigmoid(np.dot(W1, data) + b1.T)
      # a2: (visible_size, num_data)
     a3 = sigmoid(np.dot(W2, a2) + b2.T)
-    assert a2.shape = (hidden_size, num_data)
-    assert a3.shape = (visible_size, num_data)
+    assert a2.shape == (hidden_size, num_data)
+    assert a3.shape == (visible_size, num_data)
+
+    cost = 1.0 / num_data * (0.5) * np.sum((a3 - data)**2)
 
     # compute the backprop
      # delta3: (visible_size, num_data)
@@ -64,4 +65,30 @@ def sparse_autoencoder_cost(theta, visible_size, hidden_size,
     b1grad = delta2
     b2grad = delta3
     
+    grad = flatten_params(W1grad, W2grad, b1grad, b2grad)
+    return cost, grad
 
+def initialize_parameters(hidden_size, visible_size):
+    """Accepts number of hidde states in sparse encoder,
+            and number of input states in sparse encoder..
+       Initialize parameters randomly based on layer sizes.
+       Returns a new flat array of size 2*visisble_size + hidden_size
+    """
+    #we'll choose weights uniformly from the interval [-r, r]
+    r  = np.sqrt(6) / np.sqrt(hidden_size + visible_size + 1)
+    W1 = np.random.rand(hidden_size, visible_size) * 2 * r - r
+    W2 = np.random.rand(visible_size, hidden_size) * 2 * r - r
+
+    b1 = np.zeros(hidden_size)
+    b2 = np.zeros(visible_size)
+
+    """
+    % Convert weights and bias gradients to the vector form.
+    % This step will "unroll" (flatten and concatenate together) all 
+    % your parameters into a vector, which can then be used with minFunc. 
+    """
+    #TODO: jperla: make this a function
+    return flatten_params(W1, W2, b1, b2)
+
+def flatten_params(*args):
+    return np.hstack([a.flatten() for a in args])
