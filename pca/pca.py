@@ -13,6 +13,13 @@ def zero_mean(data):
     """
     return data - np.mean(data, axis=0)
 
+def covariance(data):
+    """Accepts columns of data.
+        Calculates the covariance matrix.
+        Returns new array.
+    """
+    return np.dot(data, data.T) / (data.shape[1])
+
 def pca(data, k=None):
     """Accepts columns of data, and number of dimensions to reduce to.
         Assumes that each column has mean of zero.
@@ -25,7 +32,7 @@ def pca(data, k=None):
     """
     assert k is None or 1 <= k <= data.shape[0]
 
-    sigma = np.dot(data, data.T) / (data.shape[1])
+    sigma = covariance(data)
     U, s, V = np.linalg.svd(sigma)
 
     if k is None:
@@ -34,21 +41,21 @@ def pca(data, k=None):
         x_rot = np.dot((U[:,:k]).T, data)
     return U, s, x_rot
 
-def pca_whiten(data, k=None):
+def pca_whiten(data, k=None, epsilon=0.00001):
     """Accepts columns of data.
         Assumes that each column has mean of zero.
         PCA whitens the data.
         Returns new array of same size.
     """
     U, s, x_rot = pca(data, k)
-    return x_rot / T(np.sqrt(s) + epsilon)
+    return U, s, x_rot / T(np.sqrt(s) + epsilon)
 
-def zca_whiten(data, k=None):
+def zca_whiten(data, k=None, epsilon=0.00001):
     """Accepts columns of data.
         Assumes that each column has mean of zero.
         PCA whitens the data.
         Returns new array of same size.
     """
     U, s, x_rot = pca(data, k)
-    return np.dot(U, x_rot / T(np.sqrt(s) + epsilon))
+    return U, s, np.dot(U, x_rot / T(np.sqrt(s) + epsilon))
 

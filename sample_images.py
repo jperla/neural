@@ -44,8 +44,11 @@ def load_matlab_images(matlab_filename):
 
 
 def normalize_data(patches, norm):
-    """Squash data to [0.1, 0.9] since we use sigmoid as the activation
-        function in the output layer
+    """Accepts columns of data, norm 2-tuple.
+       Zero-centers the patches.
+
+       Squash data to [norm[0], norm[1]] since we use 
+           sigmoid as the activation function in the output layer
     """
     assert norm[1] > norm[0]
     # Remove DC (mean of images). 
@@ -71,7 +74,11 @@ def sample(images, num_samples, size=(8,8), norm=(0.1, 0.9)):
             Will be a (size[0]*size[1]) x num_samples size array.
     """
     d = np.array([random_sample(images, size) for i in xrange(num_samples)]).T
-    return normalize_data(d, norm)
+    if norm is not None:
+        output = normalize_data(d, norm)
+    else:
+        output = d
+    return output
 
 def load_mnist_images(filename):
     """Accepts filename.

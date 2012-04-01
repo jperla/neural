@@ -5,5 +5,7 @@
 *.gz
 *.npy
 
+*.swp
+
 *.mat
 *.txt
