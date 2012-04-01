@@ -28,7 +28,7 @@ def array_to_file(filename, a):
     i = Image.fromarray(a.astype('uint8'))
     return i.save(filename)
 
-def display_network(filename, images, padding=1):
+def display_network(filename, images, padding=1, num_samples=100):
     """Accepts filename string,
         2-d numpy array of images,
         and padding (default 1) number of black pixels between images.
@@ -51,7 +51,13 @@ def display_network(filename, images, padding=1):
         % opt_colmajor: you can switch convention to row major for A. In that
         % case, each row of A is a filter. Default value is false.
         warning off all
+
+        Also accepts num_samples integer.  Takes first num_samples images
+            if there are too many.
     """
+    if images.shape[1] > num_samples:
+        images = images[:,:num_samples]
+
     # first figure out the shape and size of everything
     s, n = images.shape
     d = int(math.sqrt(s))

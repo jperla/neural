@@ -48,7 +48,7 @@ def pca_whiten(data, k=None, epsilon=0.00001):
         Returns new array of same size.
     """
     U, s, x_rot = pca(data, k)
-    return U, s, x_rot / T(np.sqrt(s) + epsilon)
+    return x_rot / T(np.sqrt(s) + epsilon)
 
 def zca_whiten(data, k=None, epsilon=0.00001):
     """Accepts columns of data.
@@ -56,6 +56,7 @@ def zca_whiten(data, k=None, epsilon=0.00001):
         PCA whitens the data.
         Returns new array of same size.
     """
+    k = k if k is not None else data.shape[0]
     U, s, x_rot = pca(data, k)
-    return U, s, np.dot(U, x_rot / T(np.sqrt(s) + epsilon))
+    return np.dot(U[:,:k], x_rot / T(np.sqrt(s) + epsilon))
 

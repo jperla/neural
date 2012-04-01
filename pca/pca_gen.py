@@ -9,7 +9,7 @@ import display_network
 
 if __name__=='__main__':
     num_samples = 10000
-    num_samples = 36
+    num_samples = 10000
 
     m = sample_images.load_matlab_images('IMAGES_RAW.mat')
     patches = sample_images.sample(m, num_samples, size=(12,12), norm=None)
@@ -36,41 +36,40 @@ if __name__=='__main__':
 
     # first index greater than 99%
     k = np.min(np.where(pov >= 0.99))
+    print 'k:', k
     U, s, small_x_rot = pca.pca(patches, k=k)
     x_hat = np.dot(U[:,:k], small_x_rot)
-    x_hat += mean
     display_network.display_network('99-reduced.png', x_hat)
 
 
     # first index greater than 90%
     k = np.min(np.where(pov >= 0.90))
+    print 'k:', k
     U, s, small_x_rot = pca.pca(patches, k=k)
     x_hat = np.dot(U[:,:k], small_x_rot)
-    x_hat += mean
     display_network.display_network('90-reduced.png', x_hat)
 
     # first index greater than 50%
     k = np.min(np.where(pov >= 0.50))
+    print 'k:', k
     U, s, small_x_rot = pca.pca(patches, k=k)
     x_hat = np.dot(U[:,:k], small_x_rot)
-    x_hat += mean
     display_network.display_network('50-reduced.png', x_hat)
 
 
     epsilon = 0.1
-    _, _, x_pca_white = pca.pca_whiten(patches, epsilon=epsilon)
+    x_pca_white = pca.pca_whiten(patches, epsilon=epsilon)
     c = pca.covariance(x_pca_white)
     display_network.array_to_file('pca_white_covariance.png', c)
 
 
     epsilon = 0.0
-    _, _, x_pca_white = pca.pca_whiten(patches, epsilon=epsilon)
+    x_pca_white = pca.pca_whiten(patches, epsilon=epsilon)
     c = pca.covariance(x_pca_white)
     display_network.array_to_file('pca_white_noreg_covariance.png', c)
 
 
     for epsilon in [1, 0.1, 0.01]:
-        U, s, x_zca_white = pca.zca_whiten(patches, epsilon=epsilon)
-        x_hat = x_zca_white
-        display_network.display_network('zca_%s.png' % epsilon, x_hat)
+        x_zca_white = pca.zca_whiten(patches, epsilon=epsilon)
+        display_network.display_network('zca_%s.png' % epsilon, x_zca_white)
 
