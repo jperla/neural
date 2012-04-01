@@ -1,6 +1,9 @@
-*IMAGES.mat
 *.pyc
 *.png
 
 *.dat
 *.gz
+*.npy
+
+*.mat
+*.txt

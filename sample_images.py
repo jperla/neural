@@ -34,43 +34,44 @@ def random_sample(images, size=(8,8)):
 def load_matlab_images(matlab_filename):
     """Accepts a string.
         String points to file which is a matlab matrix .mat file.
-        Loads the file and extracts the "IMAGES" key.
+        Loads the file and extracts the images in the first key that
+            begins with "IMAGES".
     """
-    images = scipy.io.loadmat(matlab_filename)['IMAGES']
+    d = scipy.io.loadmat(matlab_filename)
+    key = [k for k in d.keys() if k.startswith('IMAGES')][0]
+    images = d[key]
     return images
 
 
-def normalize_data(patches):
+def normalize_data(patches, norm):
     """Squash data to [0.1, 0.9] since we use sigmoid as the activation
         function in the output layer
     """
+    assert norm[1] > norm[0]
     # Remove DC (mean of images). 
     patches = patches - np.mean(patches)
-    try:
-        assert np.allclose(np.mean(patches), 0)
-    except Exception, e:
-        import pdb; pdb.post_mortem()
+    assert np.allclose(np.mean(patches), 0)
 
     # Truncate to +/-3 standard deviations and scale to -1 to 1
     pstd = 3 * np.std(patches)
     patches = np.maximum(np.minimum(patches, pstd), -pstd) / pstd;
-    assert np.all(patches <= 1) and np.all(-1 <= patches)
+    assert np.all(-1 <= patches) and np.all(patches <= 1)
 
     # Rescale from [-1,1] to [0.1,0.9]
-    patches = (patches + 1) * 0.4 + 0.1;
+    patches = ((patches + 1) * ((norm[1] - norm[0])/2.0)) + norm[0];
 
-    assert np.all(patches <= 0.9) and np.all(0.1 <= patches)
+    assert np.all(norm[0] <= patches) and np.all(patches <= norm[1])
     return patches
 
-def sample(images, num_samples, size=(8,8)):
+def sample(images, num_samples, size=(8,8), norm=(0.1, 0.9)):
     """Accepts an array of images.
         images.ndim = (xdim, ydim, num_images)
         Also accepts the size of the sample, a 2-tuple, (xdim, ydim).
        Returns an array of flattened images.
             Will be a (size[0]*size[1]) x num_samples size array.
     """
-    return normalize_data(np.array([random_sample(images, size)
-                                        for i in xrange(num_samples)]).T)
+    d = np.array([random_sample(images, size) for i in xrange(num_samples)]).T
+    return normalize_data(d, norm)
 
 def load_mnist_images(filename):
     """Accepts filename.
