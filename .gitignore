@@ -11,3 +11,6 @@
 *.txt
 
 *.DS_Store
+
+rae/*/data*
+rae/*/output*
