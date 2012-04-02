@@ -93,8 +93,9 @@ def load_mnist_images(filename):
 def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
     """Accepts filename string,
         a function that accepts one label argument (e.g. only get digits 5-9),
-        and a boolean (True if use only train/validation sets, 
-                       False for test set).
+        a boolean (True if use only train/validation sets, 
+                       False for test set),
+        and a num_samples integer to choose only the first N samples.
        Only reads mnist data from a special pickled mnist file.
        Returns array of images with shape (784, num_images).
     """
@@ -118,18 +119,6 @@ def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
     return patches, labels
     
 if __name__=='__main__':
-    '''
-    num_samples = 10000
-    images = load_matlab_images('IMAGES.mat')
-    samples = sample(images, num_samples, (8,8))
-
-    subset = samples[:, :200]
-    try: 
-        display_nework.display_network('samples.png', subset)
-    except Exception, e:
-        print e
-        import pdb; pdb.post_mortem()
-    '''
     train, valid, test = load_mnist_images('data/mnist.pkl.gz')
     display_network.display_network('mnist.png', train[0].T[:,:100])
 
