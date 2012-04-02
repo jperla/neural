@@ -16,12 +16,13 @@ if __name__=='__main__':
     #TODO: jperla: fine-tune!
 
 
+    # load in unsupervised feature learning since it takes a while to compute
+    l2_model = np.load('mnist.model.npy')
 
     visible_size = 28*28
     hidden_size = 196
     num_classes = 10
     softmax_weight_decay = 1e-4
-    l2_weight_decay = 3e-3
     l3_weight_decay = 3e-3
     sparsity_param = 0.1
     beta = 3
@@ -32,27 +33,6 @@ if __name__=='__main__':
     train_patches, train_labels = get_data('../data/mnist.pkl.gz', 
                                            train=True, 
                                            num_samples=num_samples)
-
-    print 'will train layer 2 model'
-    # set up L-BFGS args
-    theta = sparse_autoencoder.initialize_params(hidden_size, visible_size)
-    sae_cost = partial(sparse_autoencoder.cost,
-                        visible_size=visible_size,
-                        hidden_size=hidden_size,
-                        weight_decay=l2_weight_decay,
-                        beta=beta,
-                        sparsity_param=sparsity_param,
-                        data=train_patches)
-
-    # Train!
-    l2_model, cost, d = scipy.optimize.lbfgsb.fmin_l_bfgs_b(sae_cost, theta, 
-                                                            maxfun=max_iter, 
-                                                            m=1,
-                                                            factr=10.0,
-                                                            pgtol=1e-8,
-                                                            iprint=1)
-
-
 
     print 'will calculate l2 features...'
     l2_activations = feedforward_autoencoder(l2_model, 
