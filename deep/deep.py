@@ -41,7 +41,6 @@ if __name__=='__main__':
                                                 train_patches)
     assert l2_activations.shape == (hidden_size, train_patches.shape[1])
 
-    np.save('l2.0to9.model', l2_model)
 
     print 'will train layer 3 model'
     # set up L-BFGS args
