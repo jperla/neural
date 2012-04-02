@@ -19,11 +19,10 @@ if __name__ == '__main__':
 
     # Get the data
     num_samples = 10000
-    #num_samples = 10000
-    train, valid, test = sample_images.load_mnist_images('data/mnist.pkl.gz')
-    images = train[0].T
-    patches = images[:,:num_samples]
-    assert patches.shape == (784, num_samples)
+    patches, _ = sample_images.get_mnist_data('../data/mnist.pkl.gz',
+                                              train=True,
+                                              num_examples=num_samples)
+
 
     # set up L-BFGS args
     theta = sparse_autoencoder.initialize_params(hidden_size, visible_size)

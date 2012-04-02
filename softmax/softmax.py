@@ -114,10 +114,9 @@ def softmax_predict(softmax_model, data):
 
 if __name__=='__main__':
     num_examples = 60000
-
-    train, valid, test = sample_images.load_mnist_images('../data/mnist.pkl.gz')
-    data = train[0].T[:,:num_examples]
-    labels = train[1][:num_examples]
+    data, labels = sample_images.get_mnist_data('../data/mnist.pkl.gz',
+                                                train=True,
+                                                num_examples=num_examples)
 
     print len(labels)
 
@@ -140,8 +139,10 @@ if __name__=='__main__':
  
 
     # test on the test data
-    test_data = test[0].T
-    test_labels = test[1]
+    test_data, test_labels = sample_images.get_mnist_data('../data/mnist.pkl.gz',
+                                                train=False,
+                                                num_examples=1e10)
+
 
     predicted_labels = softmax_predict(trained, test_data)
     assert len(predicted_labels) == len(test_labels)

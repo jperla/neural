@@ -81,7 +81,7 @@ def sample(images, num_samples, size=(8,8), norm=(0.1, 0.9)):
         output = d
     return output
 
-def load_mnist_images(filename):
+def read_mnist_file(filename):
     """Accepts filename.
         Reads in MNIST data.
         Returns 3-tuple of training, validation, and test set.
@@ -99,7 +99,7 @@ def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
        Only reads mnist data from a special pickled mnist file.
        Returns array of images with shape (784, num_images).
     """
-    training, valid, testing = load_mnist_images(filename)
+    training, valid, testing = read_mnist_file(filename)
     if train:
         t = np.array([e for e,l in izip(training[0], training[1]) if test(l)])
         v = np.array([e for e,l in izip(valid[0], valid[1]) if test(l)])
@@ -119,6 +119,6 @@ def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
     return patches, labels
     
 if __name__=='__main__':
-    train, valid, test = load_mnist_images('data/mnist.pkl.gz')
+    train, valid, test = read_mnist_file('data/mnist.pkl.gz')
     display_network.display_network('mnist.png', train[0].T[:,:100])
 
