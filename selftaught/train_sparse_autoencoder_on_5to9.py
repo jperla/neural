@@ -1,5 +1,4 @@
 from functools import partial
-from itertools import izip
 
 import numpy as np
 
@@ -23,13 +22,10 @@ if __name__ == '__main__':
     num_samples = 100
     num_samples = 100000
 
-    # get digits from 5-9 from mnist data
-    train, valid, test = sample_images.load_mnist_images('../data/mnist.pkl.gz')
-    t = np.array([e for e,l in izip(train[0], train[1]) if l >= 5])
-    v = np.array([e for e,l in izip(valid[0], valid[1]) if l >= 5])
-    images = np.vstack([t, v]).T
-    patches = images[:,:num_samples]
-    assert patches.shape[0] == 784
+    patches,_ = sample_images.get_mnist_data('../data/mnist.pkl.gz',
+                                           lambda l: l >= 5,
+                                           train=True,
+                                           num_samples=num_samples)
 
     # set up L-BFGS args
     theta = sparse_autoencoder.initialize_params(hidden_size, visible_size)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import numpy as np
 
+from neurolib import T, sigmoid, binary_KL_divergence
+
 def cost(theta, visible_size, hidden_size,
          weight_decay, sparsity_param, beta, data):
     """
@@ -111,24 +113,4 @@ def unflatten_params(theta, hidden_size, visible_size):
     b1 = theta[2*hv:2*hv+hidden_size]
     b2 = theta[2*hv+hidden_size:]
     return W1, W2, b1, b2
-
-def T(a):
-    """Given 1-d array. Make it a column vector.
-        Returns 2d array with Nx1 size.
-
-        Useful when adding a column vector to every column in a matrix.
-            (instead of bsxfun or repmat in Matlab)
-    """
-    return a.reshape(len(a), 1)
-
-def sigmoid(x): 
-    """Accepts real.
-        Returns real.
-        Sigmoid function: range is [0,1].
-        Similar to tanh function.
-    """
-    return 1.0 / (1.0 + np.exp(-x))
-
-def binary_KL_divergence(p1, p2):
-    return (p1 * np.log(p1/p2)) + ((1 - p1) * np.log((1 - p1) / (1 - p2)))
 

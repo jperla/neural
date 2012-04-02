@@ -2,6 +2,7 @@
 import gzip
 import cPickle
 import random
+from itertools import izip
 
 import numpy as np
 import scipy.io
@@ -88,6 +89,32 @@ def load_mnist_images(filename):
     with gzip.open(filename, 'rb') as f:
         train_set, valid_set, test_set = cPickle.load(f)
     return train_set, valid_set, test_set
+
+def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
+    """Accepts filename string,
+        a function that accepts one label argument (e.g. only get digits 5-9),
+        and a boolean (True if use only train/validation sets, 
+                       False for test set).
+       Only reads mnist data from a special pickled mnist file.
+       Returns array of images with shape (784, num_images).
+    """
+    training, valid, testing = load_mnist_images(filename)
+    if train:
+        t = np.array([e for e,l in izip(train[0], train[1]) if test(l)])
+        v = np.array([e for e,l in izip(valid[0], valid[1]) if test(l)])
+        images = np.vstack([t, v]).T
+        tl = np.array([l for e,l in izip(train[0], train[1]) if test(l)])
+        vl = np.array([l for e,l in izip(valid[0], valid[1]) if test(l)])
+        labels = np.hstack(tl, vl)
+    else:
+        images = np.array([e for e,l in izip(test[0], test[1]) if test(l)]).T
+        labels = np.array([l for e,l in izip(test[0], test[1]) if test(l)])
+    assert images.shape[1] == len(labels)
+    assert images.shape[0] == 784
+    patches = images[:,:num_samples]
+    labels = labels[:num_samples]
+    assert patches.shape[0] == 784
+    return patches, labels
     
 if __name__=='__main__':
     '''

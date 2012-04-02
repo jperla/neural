@@ -3,7 +3,6 @@ from functools import partial
 import numpy as np
 
 import sample_images
-import numerical_gradient
 import sparse_autoencoder
 
 from test_numerical_gradient import diff_grad, check_grad
