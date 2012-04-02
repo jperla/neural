@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import math
-
 import numpy as np
 
 def cost(theta, visible_size, hidden_size,
@@ -18,6 +16,7 @@ def cost(theta, visible_size, hidden_size,
     % We first convert theta to the (W1, W2, b1, b2) matrix/vector format, so that this 
     % follows the notation convention of the lecture notes. 
     """
+    sparsity_param = float(sparsity_param)
     W1, W2, b1, b2 = unflatten_params(theta, hidden_size, visible_size)
     num_data = data.shape[1]
 
@@ -29,13 +28,13 @@ def cost(theta, visible_size, hidden_size,
 
 
 
-    cost = 1.0 / num_data * ((0.5) * np.sum((a3 - data)**2))
+    cost = 1.0 / num_data * (0.5 * np.sum((a3 - data)**2))
     # add in weight decay
     cost += (0.5 * weight_decay) * (np.sum(W1**2) + np.sum(W2**2))
     # add in sparsity parameter
     sparsity = np.sum(a2, axis=1) / float(num_data)
     assert sparsity.shape == (hidden_size,)
-    s = sum(binary_KL_divergence(sparsity_param, sparsity))
+    s = np.sum(binary_KL_divergence(sparsity_param, sparsity))
     cost += beta * s
 
     # delta3: Compute the backprop (product rule)
@@ -131,6 +130,5 @@ def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
 def binary_KL_divergence(p1, p2):
-    p1, p2 = float(p1), float(p2)
-    return (p1 * math.log(p1/p2)) + ((1 - p1) * math.log((1 - p1) / (1 - p2)))
+    return (p1 * np.log(p1/p2)) + ((1 - p1) * np.log((1 - p1) / (1 - p2)))
 

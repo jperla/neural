@@ -101,6 +101,17 @@ def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter)
     return trained.reshape((num_classes, input_size))
 
 
+def softmax_predict(softmax_model, data):
+    """Accepts model and data.
+        Model shape is (num_labels, input_size), 
+            data shape is (input_size, num_examples).
+        Returns array of predicted labels from 0..num_labels .
+    """
+    # note: do not need to use exponential or sigmoid since
+    #it's monotonic
+    return np.argmax(np.dot(softmax_model, data), axis=0)
+
+
 if __name__=='__main__':
     num_examples = 60000
 
@@ -127,12 +138,13 @@ if __name__=='__main__':
     np.save('softmax.model', trained)
     display_network.display_network('softmax.png', trained.T)
  
+
     # test on the test data
     test_data = test[0].T
     test_labels = test[1]
 
-    predicted_labels = np.argmax(np.dot(trained, test_data), axis=0)
+    predicted_labels = softmax_predict(trained, test_data)
     assert len(predicted_labels) == len(test_labels)
     
-    print (float(np.sum(predicted_labels == test_labels)) / len(test_labels))
+    print np.mean(predicted_labels == test_labels)
 

@@ -45,7 +45,7 @@ def test_sae_cost():
     if weight_decay > 0:
         noweight_sae_cost = partial(base_sae_cost, weight_decay=0, beta=beta)
         noweight_cost, noweight_grad, _ = check_grad(noweight_sae_cost, 
-                                                    theta, threshold)
+                                                     theta, threshold)
         print 'noweight cost:', noweight_cost
         diff = diff_grad(grad, noweight_grad)
         print 'noweight diff:', diff

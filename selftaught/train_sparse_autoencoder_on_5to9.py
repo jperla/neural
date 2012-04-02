@@ -53,6 +53,6 @@ if __name__ == '__main__':
                                                          hidden_size,
                                                          visible_size)
     display_network.display_network('mnist-features.png', W1.T)
-    np.save('mnist.model', trained)
+    np.save('mnist.5to9.model', trained)
 
 
