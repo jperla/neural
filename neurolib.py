@@ -18,5 +18,10 @@ def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
 def binary_KL_divergence(p1, p2):
+    """Accepts two real numbers.
+        Works if one of them is an numpy array (returns an array of reals).
+        Returns the a real, KL divergence of two binomial distributions with 
+            probabilities p1 and p2 respectively.
+    """
     return (p1 * np.log(p1/p2)) + ((1 - p1) * np.log((1 - p1) / (1 - p2)))
 
