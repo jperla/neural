@@ -23,7 +23,7 @@ def feedforward_autoencoder(theta, hidden_size, visible_size, data):
     return sigmoid(np.dot(W1, data) + T(b1))
 
 if __name__=='__main__':
-    # load in previous model since it takes a while to calculate
+    # load in unsupervised feature learning since it takes a while to compute
     feature_model = np.load('mnist.model.npy')
 
     visible_size = 28*28
@@ -32,7 +32,11 @@ if __name__=='__main__':
     weight_decay = 1e-4
     max_iter = 400
 
-    train_patches, train_labels = sample_images.get_mnist_data('../data/mnist.pkl.gz', lambda l: l <= 4, train=True, num_samples=100000)
+    get_data = sample_images.get_mnist_data
+    train_patches, train_labels = get_data('../data/mnist.pkl.gz', 
+                                           lambda l: l <= 4, 
+                                           train=True, 
+                                           num_samples=100000)
 
     print 'will calculate training features...'
     train_activations = feedforward_autoencoder(feature_model, 
@@ -54,7 +58,10 @@ if __name__=='__main__':
  
     # use model to predict
     print 'will load test data...'
-    test_patches, test_labels = sample_images.get_mnist_data('../data/mnist.pkl.gz', lambda l: l <= 4, train=False, num_samples=100000)
+    test_patches, test_labels = get_data('../data/mnist.pkl.gz', 
+                                         lambda l: l <= 4, 
+                                         train=False, 
+                                         num_samples=100000)
 
     print 'will compute test features...'
     test_activations = feedforward_autoencoder(feature_model, 
@@ -68,5 +75,6 @@ if __name__=='__main__':
     predicted_labels = softmax.softmax_predict(trained, test_activations)
     assert len(predicted_labels) == len(test_labels)
     print 'accuracy', 100 * np.mean(predicted_labels == test_labels)
+    # 98.6 % accuracy!
 
 
