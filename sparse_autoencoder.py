@@ -76,7 +76,7 @@ def initialize_params(hidden_size, visible_size):
        Initialize parameters randomly based on layer sizes.
        Returns a new flat array of size 2*visisble_size + hidden_size
     """
-    assert hidden_size < visible_size
+    assert hidden_size <= visible_size
 
     #we'll choose weights uniformly from the interval [-r, r]
     r  = np.sqrt(6) / np.sqrt(hidden_size + visible_size + 1)
