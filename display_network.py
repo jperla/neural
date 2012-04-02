@@ -28,7 +28,7 @@ def array_to_file(filename, a):
     i = Image.fromarray(a.astype('uint8'))
     return i.save(filename)
 
-def display_network(filename, images, padding=1, num_samples=100):
+def display_network(filename, images, padding=1, num_samples=200):
     """Accepts filename string,
         2-d numpy array of images,
         and padding (default 1) number of black pixels between images.

@@ -85,10 +85,10 @@ def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter)
     # initialize parameters
     theta = 0.005 * np.random.randn(num_classes * input_size)
 
-    sc = lambda x: softmax_cost(x, num_classes, 
-                                   input_size, 
-                                   weight_decay, 
-                                   data, 
+    sc = lambda x: softmax_cost(x, num_classes,
+                                   input_size,
+                                   weight_decay,
+                                   data,
                                    labels)
 
     # Train!
@@ -96,7 +96,7 @@ def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter)
                                                            maxfun=max_iter,
                                                            m=100,
                                                            factr=1.0,
-                                                           pgtol=1e-100,
+                                                           pgtol=1e-20,
                                                            iprint=1)
     return trained.reshape((num_classes, input_size))
 

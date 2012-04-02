@@ -23,7 +23,9 @@ def feedforward_autoencoder(theta, hidden_size, visible_size, data):
     return sigmoid(np.dot(W1, data) + T(b1))
 
 if __name__=='__main__':
+    # load in previous model since it takes a while to calculate
     feature_model = np.load('mnist.model.npy')
+
     visible_size = 28*28
     hidden_size = 196
     num_classes = 5
@@ -41,15 +43,14 @@ if __name__=='__main__':
 
     print 'will train classifier...'
     # train softmax classifier on autoencoded features
-    trained = softmax.softmax_train(visible_size, 
+    trained = softmax.softmax_train(hidden_size, 
                                     num_classes, 
                                     weight_decay, 
                                     train_activations,
                                     train_labels,
                                     max_iter)
     
-    np.save('softmax.1to4.model', trained)
-    display_network.display_network('softmax.1to4.png', trained.T)
+    np.save('softmax.0to4.model', trained)
  
     # use model to predict
     print 'will load test data...'
@@ -64,7 +65,7 @@ if __name__=='__main__':
     
 
     print 'will predict labels...'
-    predicted_labels = softmax.softmax_predict(trained, test_patches)
+    predicted_labels = softmax.softmax_predict(trained, test_activations)
     assert len(predicted_labels) == len(test_labels)
     print 'accuracy', 100 * np.mean(predicted_labels == test_labels)
 

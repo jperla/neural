@@ -100,15 +100,16 @@ def get_mnist_data(filename, test=lambda l: True, train=True, num_samples=1000):
     """
     training, valid, testing = load_mnist_images(filename)
     if train:
-        t = np.array([e for e,l in izip(train[0], train[1]) if test(l)])
+        t = np.array([e for e,l in izip(training[0], training[1]) if test(l)])
         v = np.array([e for e,l in izip(valid[0], valid[1]) if test(l)])
         images = np.vstack([t, v]).T
-        tl = np.array([l for e,l in izip(train[0], train[1]) if test(l)])
+        tl = np.array([l for e,l in izip(training[0], training[1]) if test(l)])
         vl = np.array([l for e,l in izip(valid[0], valid[1]) if test(l)])
-        labels = np.hstack(tl, vl)
+        labels = np.hstack([tl, vl])
     else:
-        images = np.array([e for e,l in izip(test[0], test[1]) if test(l)]).T
-        labels = np.array([l for e,l in izip(test[0], test[1]) if test(l)])
+        t = testing
+        images = np.array([e for e,l in izip(t[0], t[1]) if test(l)]).T
+        labels = np.array([l for e,l in izip(t[0], t[1]) if test(l)])
     assert images.shape[1] == len(labels)
     assert images.shape[0] == 784
     patches = images[:,:num_samples]
