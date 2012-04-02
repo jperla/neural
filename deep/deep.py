@@ -41,6 +41,8 @@ if __name__=='__main__':
                                                 train_patches)
     assert l2_activations.shape == (hidden_size, train_patches.shape[1])
 
+    np.save('l2.0to9.model', l2_model)
+
     print 'will train layer 3 model'
     # set up L-BFGS args
     theta = sparse_autoencoder.initialize_params(hidden_size, hidden_size)
@@ -68,6 +70,7 @@ if __name__=='__main__':
     assert l3_activations.shape == (hidden_size, l2_activations.shape[1])
 
 
+    np.save('l3.0to9.model', l3_model)
 
     print 'will train classifier...'
     # train softmax classifier on autoencoded features
