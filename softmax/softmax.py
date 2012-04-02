@@ -8,6 +8,7 @@ import display_network
 import sample_images
 import numerical_gradient
 
+np.seterr('raise')
 
 def norm(x):
     """Accepts n-d array. Calculates L2-norm.
@@ -26,32 +27,49 @@ def softmax_cost(theta, num_classes, input_size, weight_decay, data, labels):
     % labels - an M x 1 matrix containing the labels corresponding for the input data
     """
     # Unroll the parameters from theta
-    theta = np.reshape(theta, (num_classes, input_size))
-    num_cases = data.shape[1]
+    theta = theta.reshape((num_classes, input_size))
+    num_data = data.shape[1]
+    assert theta.shape == (num_classes, input_size)
 
+    assert data.shape == (input_size, num_data)
     # efficiently build large sparse matrix
-    #ground_truth = full(sparse(labels, 1:numCases, 1));
     ij = np.array([[i, l] for i,l in enumerate(labels)]).T
-    ground_truth = scipy.sparse.coo_matrix((np.ones(num_cases), ij),
-                                shape=(num_cases, num_classes)).todense()
+    ground_truth = scipy.sparse.coo_matrix((np.ones(num_data), ij),
+                                shape=(num_data, num_classes)).todense().T
+    assert ground_truth.shape == (num_classes, num_data)
 
     # calculate cost function
     full_prediction = np.dot(theta, data)
     max_prediction = np.max(full_prediction, axis=0)
-    normed_prediction = full_prediction - max_prediction
+    shrunk_prediction = full_prediction - max_prediction
+    exp_shrunk_prediction = np.exp(shrunk_prediction) 
+    prediction = (exp_shrunk_prediction / 
+                                    np.sum(exp_shrunk_prediction, axis=0))
+    assert full_prediction.shape == (num_classes, num_data)
+    assert max_prediction.shape == (num_data,)
+    assert shrunk_prediction.shape == (num_classes, num_data)
+    assert exp_shrunk_prediction.shape == (num_classes, num_data)
+    assert prediction.shape == (num_classes, num_data)
 
-    log_term = (normed_prediction - 
-                    np.log(np.sum(np.exp(normed_prediction), axis=0)))
-    cost = - np.sum(np.dot(ground_truth, log_term)) / num_cases
+    log_term = np.log(prediction)
+    cost = -1 * np.sum(np.multiply(ground_truth, log_term)) / num_data
     cost += (0.5 * weight_decay) * np.sum(theta**2)
     # done calculating cost function
 
     # calculate gradient of cost function
-    theta_grad = - np.sum(np.dot(data, ground_truth - np.exp(log_term))) / num_cases
-    theta_grad += weight_decay * theta
+    theta_grad = np.zeros(theta.shape)
 
+    #import pdb; pdb.set_trace()
+    for j in xrange(num_classes):
+        row = np.zeros((input_size,))
+        for i in xrange(num_data):
+            row += data[:,i] * (ground_truth[j, i] - prediction[j, i])
+        assert row.shape == (input_size,)
+        theta_grad[j] += row * -1.0 / num_data
+    theta_grad += weight_decay * theta
     assert theta_grad.shape == theta.shape
-    return cost, theta_grad.flatten()
+
+    return cost, np.array(theta_grad).flatten()
 
 
 def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter):
@@ -90,7 +108,7 @@ def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter)
 
 
 if __name__=='__main__':
-    num_examples = 100
+    num_examples = 20
 
     '''
     train, valid, test = sample_images.load_mnist_images('data/mnist.pkl.gz')
@@ -111,19 +129,23 @@ if __name__=='__main__':
 
     theta = 0.005 * np.random.randn(num_classes * input_size)
 
-    sc = partial(softmax_cost, num_classes=num_classes, 
+    sc = partial(softmax_cost, num_classes=num_classes,
                                input_size=input_size,
-                               weight_decay=weight_decay, 
-                               data=data, 
+                               weight_decay=weight_decay,
+                               data=data,
                                labels=labels)
 
     cost, grad = sc(theta)
 
     ngrad = numerical_gradient.compute(theta,
-                                       lambda x: sc(x),
+                                       lambda x: sc(x)[0],
                                        epsilon=0.0001)
-
-    print ngrad, grad
-    diff = norm(grad-ngrad) + norm(grad+ngrad)
-    print 'diff', diff
-    assert diff < 2e-9
+ 
+    try:
+        print ngrad, grad
+        diff = norm(grad-ngrad)/norm(grad+ngrad)
+        print 'diff', diff
+        assert diff < 2e-9
+    except Exception, e:
+        print e
+        import pdb; pdb.post_mortem()
