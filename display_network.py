@@ -11,11 +11,6 @@ def normalize_array(a, norm_max=255):
     c = a - np.min(a.flatten())
     c = c / np.max(c)
     centered = c * norm_max
-    #min = np.min(a.flatten())
-    #norm = np.max(a.flatten()) - min
-    #normed = norm_max * a / norm
-    #min = np.min(normed.flatten())
-    #centered = normed - min
     return centered
 
 def array_to_file(filename, a):

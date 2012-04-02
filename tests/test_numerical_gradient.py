@@ -5,6 +5,16 @@ import numerical_gradient
 from testlib import diff_grad
 
 def check_grad(sc, theta, threshold):
+    """Accepts a function that returns (cost, gradient),
+        and theta numpy array that is an input to the function,
+        and a threshold small real number.
+
+        Asserts that the gradient output by the function is close to
+            (within threshold) of the numerically computed gradient.
+
+        Returns the cost, gradient, and numerically computed gradient
+            (gradients are arrays of same size as theta)
+    """
     cost, grad = sc(theta)
     ngrad = numerical_gradient.compute(theta,
                                        lambda x: sc(x)[0],
