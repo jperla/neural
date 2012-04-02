@@ -31,11 +31,11 @@ def cost(theta, visible_size, hidden_size,
 
     cost = 1.0 / num_data * ((0.5) * np.sum((a3 - data)**2))
     # add in weight decay
-    cost += weight_decay / 2.0 * (np.sum(W1**2) + np.sum(W2**2))
+    cost += (0.5 * weight_decay) * (np.sum(W1**2) + np.sum(W2**2))
     # add in sparsity parameter
     sparsity = np.sum(a2, axis=1) / float(num_data)
     assert sparsity.shape == (hidden_size,)
-    s = sum(binary_KL_divergence(sparsity_param, p) for p in sparsity)
+    s = sum(binary_KL_divergence(sparsity_param, sparsity))
     cost += beta * s
 
     # delta3: Compute the backprop (product rule)

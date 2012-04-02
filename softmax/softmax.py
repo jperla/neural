@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-from functools import partial
-
 import scipy
+import scipy.optimize
 import numpy as np
 
 import display_network
 import sample_images
-import numerical_gradient
 
 np.seterr('raise')
 
@@ -60,12 +58,8 @@ def softmax_cost(theta, num_classes, input_size, weight_decay, data, labels):
     theta_grad = np.zeros(theta.shape)
 
     #import pdb; pdb.set_trace()
-    for j in xrange(num_classes):
-        row = np.zeros((input_size,))
-        for i in xrange(num_data):
-            row += data[:,i] * (ground_truth[j, i] - prediction[j, i])
-        assert row.shape == (input_size,)
-        theta_grad[j] += row * -1.0 / num_data
+    gp = ground_truth - prediction
+    theta_grad = np.dot(data, gp.T).T * (-1.0 / num_data)
     theta_grad += weight_decay * theta
     assert theta_grad.shape == theta.shape
 
@@ -108,44 +102,37 @@ def softmax_train(input_size, num_classes, weight_decay, data, labels, max_iter)
 
 
 if __name__=='__main__':
-    num_examples = 20
+    num_examples = 60000
 
-    '''
-    train, valid, test = sample_images.load_mnist_images('data/mnist.pkl.gz')
-    display_network.display_network('mnist.png', train[0].T[:,:num_examples])
-    '''
+    train, valid, test = sample_images.load_mnist_images('../data/mnist.pkl.gz')
+    data = train[0].T[:,:num_examples]
+    labels = train[1][:num_examples]
+
+    print len(labels)
 
     input_size = 28 * 28 # Size of input vector (MNIST images are 28x28)
     num_classes = 10     # Number of classes (MNIST images fall into 10 classes)
     weight_decay = 1e-4 # Weight decay parameter
-
-    # for testing
-    input_size = 8
-    data = np.random.randn(input_size, num_examples)
-    labels = np.random.randint(0, num_classes, num_examples)
-
-    # do gradient calculations
-    # check numerically
+    max_iter = 400
 
     theta = 0.005 * np.random.randn(num_classes * input_size)
 
-    sc = partial(softmax_cost, num_classes=num_classes,
-                               input_size=input_size,
-                               weight_decay=weight_decay,
-                               data=data,
-                               labels=labels)
-
-    cost, grad = sc(theta)
-
-    ngrad = numerical_gradient.compute(theta,
-                                       lambda x: sc(x)[0],
-                                       epsilon=0.0001)
+    trained = softmax_train(input_size, 
+                            num_classes, 
+                            weight_decay, 
+                            data, 
+                            labels, 
+                            max_iter)
+    
+    np.save('softmax.model', trained)
+    display_network.display_network('softmax.png', trained.T)
  
-    try:
-        print ngrad, grad
-        diff = norm(grad-ngrad)/norm(grad+ngrad)
-        print 'diff', diff
-        assert diff < 2e-9
-    except Exception, e:
-        print e
-        import pdb; pdb.post_mortem()
+    # test on the test data
+    test_data = test[0].T
+    test_labels = test[1]
+
+    predicted_labels = np.argmax(np.dot(trained, test_data), axis=0)
+    assert len(predicted_labels) == len(test_labels)
+    
+    print (float(np.sum(predicted_labels == test_labels)) / len(test_labels))
+

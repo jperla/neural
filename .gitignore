@@ -9,3 +9,5 @@
 
 *.mat
 *.txt
+
+*.DS_Store
