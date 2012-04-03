@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 
+import neurolib
 from neurolib import T, sigmoid, binary_KL_divergence
 
 def cost(theta, visible_size, hidden_size,
@@ -67,7 +68,7 @@ def cost(theta, visible_size, hidden_size,
     assert b1grad.shape == b1.shape
     assert b2grad.shape == b2.shape
     
-    grad = flatten_params(W1grad, W2grad, b1grad, b2grad)
+    grad = neurolib.flatten_params(W1grad, W2grad, b1grad, b2grad)
     return cost, grad
 
 def initialize_params(hidden_size, visible_size):
@@ -92,14 +93,8 @@ def initialize_params(hidden_size, visible_size):
     % your parameters into a vector, which can then be used with minFunc. 
     """
     #TODO: jperla: make this a function
-    return flatten_params(W1, W2, b1, b2)
+    return neurolib.flatten_params(W1, W2, b1, b2)
 
-def flatten_params(*args):
-    """Accepts a list of matrices.
-        Flattens and concatenates the matrices.
-        Returns a 1-d array.
-    """
-    return np.hstack([a.flatten() for a in args])
 
 def unflatten_params(theta, hidden_size, visible_size):
     """Accepts flat 1-D vector theta.

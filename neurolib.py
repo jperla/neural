@@ -26,3 +26,9 @@ def binary_KL_divergence(p1, p2):
     return (p1 * np.log(p1/p2)) + ((1 - p1) * np.log((1 - p1) / (1 - p2)))
 
 
+def flatten_params(*args):
+    """Accepts a list of matrices.
+        Flattens and concatenates the matrices.
+        Returns a 1-d array.
+    """
+    return np.hstack([a.flatten() for a in args])
