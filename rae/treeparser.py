@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 import string
 
+import numpy as np
+
 import pyparse
-
-
 from pyparse import Join, Any, Recursive, Keyword
 from pyparse import AlphaWord, Nested, Repeat, ContiguousSymbols
 
@@ -28,7 +29,10 @@ pos = Any(*[Keyword(i) for i in pos_tokens])
 subtree = Recursive()
 #TODO: jperla: is Repeat right here?
 # might be different for different POS?
-n = Join(None, Repeat(Keyword(' '), ignore=True), Nested(content=subtree), Repeat(Keyword(' '), ignore=True))
+# n:      (..subtree..)     
+n = Join(None, Repeat(Keyword(' '), ignore=True), 
+               Nested(content=subtree), 
+               Repeat(Keyword(' '), ignore=True))
 subtree_or_word = Any(word, Repeat(n))
 subtree.update(None, Join(None, pos,    
                                 Repeat(Keyword(' '), ignore=True),
@@ -57,8 +61,11 @@ class Node(object):
 
 
 def extract_parse_tree(stanford_parse):
-    """Accepts an AST of a Stanford parse tree.
-        Returns a new AST with only the words in a sentence.
+    """Accepts an AST of a Stanford parse tree (with part of speech tags).
+        Returns a new binary tree with only the words in a sentence.
+        Right-associatively.
+
+        Useful for computing word vectors on the phrases/sentences
     """
     def consolidate(l, r):
         """Accepts two lists of size 0-2.
@@ -74,7 +81,7 @@ def extract_parse_tree(stanford_parse):
 
     def glr(a):
         """Accepts a list of subtrees.
-            Returns a 2-tuple of trees.
+            Returns a 2-tuple of trees (basically for binary tree).
         """
         if len(a) == 0:
             return [], []
@@ -93,6 +100,8 @@ def extract_parse_tree(stanford_parse):
                     return glr(a[1])
             else:
                 r = a[1]
+                #TODO: jperla: should I do this?
+                # there are word vectors for periods/commas
                 if r in string.punctuation:
                     return [], [] 
                 else:
@@ -104,25 +113,62 @@ def extract_parse_tree(stanford_parse):
     assert left == []
     return right
 
+def vectorize(vectors, params, tree):
+    """Accepts the word embeddings, parameters for combining words,
+        and a binary tree.
+       Returns (recursively) a 4-tuple of 
+            sentence length integer,
+            full sentence string,
+            embedding vector,
+            and also returns a dictionary of "phrase" => vector.
+                (for convenience)
+
+            Or None if it's a null node.
+    """
+    if isinstance(tree, basestring):
+        word = tree
+        v = vectors[word]
+        return 1, word, v, {word: v}
+
+    if tree is None:
+        return None
+
+    left, right = tree[0], tree[1]
+    if left is None:
+        return vectorize(vectors, params, right)
+    elif right is None:
+        return vectorize(vectors, params, left)
+    else:
+        n1, phrase1, v1, phrases1 = vectorize(vectors, params, left)
+        n2, phrase2, v2, phrases2 = vectorize(vectors, params, right)
+        phrases = {}
+        phrases.update(phrases1)
+        phrases.update(phrases2)
+        v = np.tanh((n1 * np.dot(params['W1'], v1)) +
+                    (n2 * np.dot(params['W2'], v2)) + params['b1'])
+        p = phrase1 + ' ' + phrase2
+        phrases[p] = v
+        return (n1 + n2), p, v, phrases
 
 if __name__=='__main__':
     ast = read_stanford_parser('parsed.txt')
     trees = [extract_parse_tree(a) for a in ast]
     print trees
 
-    '''
-    from pypm import patternmatch, a, b, _
-    from pypm import anynode, starargs, recurse_ast
-    @patternmatch([
-        {('.', '.'): lambda: ('Num', a * b)},
-        {(anynode, starargs): 
-                    lambda anynode,starargs: recurse_ast(evalMinus, anynode, starargs)},
-    ])
-    def remove_period(ast):
-        pass
+    import scipy.io
+    v = scipy.io.loadmat('data/vars.normalized.100.mat')
+    vocab_size = v['We'].shape[1]
+    vectors = dict((v['words'][0,i][0], v['We'][:,i]) 
+                                    for i in xrange(vocab_size))
+    params = scipy.io.loadmat('data/params.mat')
 
-    ast = 
-    '''
+    try:
+        calculated = [vectorize(vectors, params, t) for t in trees]
+    except Exception, e:
+        print e
+        import pdb; pdb.post_mortem()
+
+    print calculated
 
     '''
     root = None
